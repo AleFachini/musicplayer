@@ -1,7 +1,10 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:musicplayer/src/helpers/helpers.dart';
+import 'package:musicplayer/src/model/audio_player.dart';
 import 'package:musicplayer/src/widgets/custom_appbar.dart';
+import 'package:provider/provider.dart';
 
 class MusicPlayerPage extends StatelessWidget {
   MusicPlayerPage({Key? key}) : super(key: key);
@@ -130,12 +133,16 @@ class _TiltePlayState extends State<TiltePlay>
             elevation: 0,
             highlightElevation: 0,
             onPressed: () {
+              final audioPlayerModel =
+                  Provider.of<AudioPlayerModel>(context, listen: false);
               if (isPlaying) {
                 iconAnimation!.reverse(from: 1);
                 isPlaying = false;
+                audioPlayerModel.controller.stop();
               } else {
                 iconAnimation!.forward(from: 0);
                 isPlaying = true;
+                audioPlayerModel.controller.repeat();
               }
             },
             backgroundColor: Color(0xfff8cb51),
@@ -217,6 +224,8 @@ class DiscCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final audioPlayerModel = Provider.of<AudioPlayerModel>(context);
+
     return Container(
       padding: EdgeInsets.all(20),
       width: 250,
@@ -226,7 +235,13 @@ class DiscCover extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            Image(image: AssetImage('assets/aurora.jpg')),
+            SpinPerfect(
+                duration: Duration(seconds: 10),
+                infinite: true,
+                manualTrigger: true,
+                controller: (animationController) =>
+                    audioPlayerModel.controller = animationController,
+                child: Image(image: AssetImage('assets/aurora.jpg'))),
             Container(
               width: 25,
               height: 25,
