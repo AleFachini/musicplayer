@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:musicplayer/src/pages/music_player_page.dart';
+import 'package:musicplayer/src/theme/theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,13 +14,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Music Player',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-        ),
+        theme: miTema,
         home: Scaffold(
-          appBar: AppBar(
-            title: Text('Material App Bar'),
-          ),
           body: MusicPlayerPage(),
         ));
   }
