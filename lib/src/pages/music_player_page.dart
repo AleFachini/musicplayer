@@ -1,4 +1,5 @@
 import 'package:animate_do/animate_do.dart';
+import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:musicplayer/src/helpers/helpers.dart';
@@ -91,13 +92,16 @@ class TiltePlay extends StatefulWidget {
 class _TiltePlayState extends State<TiltePlay>
     with SingleTickerProviderStateMixin {
   bool isPlaying = false;
+  bool firstTime = true;
   AnimationController? iconAnimation;
+  final assetAudioPlayer = AssetsAudioPlayer();
 
   @override
   void initState() {
     //El mixin SingleTickProvider... es requerido para el vsync del controller
     iconAnimation =
         AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+
     super.initState();
   }
 
@@ -105,6 +109,26 @@ class _TiltePlayState extends State<TiltePlay>
   void dispose() {
     iconAnimation!.dispose();
     super.dispose();
+  }
+
+  void open() {
+    final audioPlayerModel =
+        Provider.of<AudioPlayerModel>(context, listen: false);
+
+    assetAudioPlayer.open(
+      Audio('assets/Breaking-Benjamin-Far-Away.mp3'),
+      autoStart: true,
+      showNotification: true,
+    );
+
+    assetAudioPlayer.currentPosition.listen((duration) {
+      audioPlayerModel.current = duration;
+    });
+
+    assetAudioPlayer.current.listen((playingAudio) {
+      audioPlayerModel.songDuration =
+          playingAudio?.audio.duration ?? Duration(seconds: 0);
+    });
   }
 
   @override
@@ -135,14 +159,28 @@ class _TiltePlayState extends State<TiltePlay>
             onPressed: () {
               final audioPlayerModel =
                   Provider.of<AudioPlayerModel>(context, listen: false);
+
               if (isPlaying) {
-                iconAnimation!.reverse(from: 1);
+                iconAnimation!.reverse();
                 isPlaying = false;
                 audioPlayerModel.controller.stop();
               } else {
-                iconAnimation!.forward(from: 0);
+                iconAnimation!.forward();
                 isPlaying = true;
-                audioPlayerModel.controller.repeat();
+                audioPlayerModel.controller.repeat(); //No repite
+              }
+
+              if (firstTime) {
+                open();
+                firstTime = false;
+
+                audioPlayerModel.controller.addListener(() {
+                  if (audioPlayerModel.controller.isCompleted) {
+                    audioPlayerModel.controller.repeat();
+                  }
+                });
+              } else {
+                assetAudioPlayer.playOrPause();
               }
             },
             backgroundColor: Color(0xfff8cb51),
@@ -187,11 +225,13 @@ class ProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final thisStyle = TextStyle(color: Colors.white.withOpacity(0.4));
+    final audioPlayerModel = Provider.of<AudioPlayerModel>(context);
+    final percent = audioPlayerModel.percent;
 
     return Container(
       child: Column(
         children: [
-          Text('00:00', style: thisStyle),
+          Text('${audioPlayerModel.songTotalDuration}', style: thisStyle),
           Stack(
             children: [
               Container(
@@ -204,13 +244,13 @@ class ProgressBar extends StatelessWidget {
                 bottom: 0,
                 child: Container(
                   width: 3,
-                  height: 200,
+                  height: 230 * percent,
                   color: Colors.white.withOpacity(0.8),
                 ),
               )
             ],
           ),
-          Text('00:00', style: thisStyle),
+          Text('${audioPlayerModel.currentSecond}', style: thisStyle),
         ],
       ),
     );
