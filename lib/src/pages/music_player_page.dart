@@ -76,10 +76,33 @@ class Lyrics extends StatelessWidget {
   }
 }
 
-class TiltePlay extends StatelessWidget {
+class TiltePlay extends StatefulWidget {
   TiltePlay({
     Key? key,
   }) : super(key: key);
+
+  @override
+  State<TiltePlay> createState() => _TiltePlayState();
+}
+
+class _TiltePlayState extends State<TiltePlay>
+    with SingleTickerProviderStateMixin {
+  bool isPlaying = false;
+  AnimationController? iconAnimation;
+
+  @override
+  void initState() {
+    //El mixin SingleTickProvider... es requerido para el vsync del controller
+    iconAnimation =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    iconAnimation!.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -107,10 +130,19 @@ class TiltePlay extends StatelessWidget {
             elevation: 0,
             highlightElevation: 0,
             onPressed: () {
-              //TODO:
+              if (isPlaying) {
+                iconAnimation!.reverse(from: 1);
+                isPlaying = false;
+              } else {
+                iconAnimation!.forward(from: 0);
+                isPlaying = true;
+              }
             },
             backgroundColor: Color(0xfff8cb51),
-            child: Icon(Icons.play_arrow),
+            child: AnimatedIcon(
+              icon: AnimatedIcons.play_pause,
+              progress: iconAnimation!,
+            ),
           )
         ],
       ),
@@ -179,7 +211,7 @@ class ProgressBar extends StatelessWidget {
 }
 
 class DiscCover extends StatelessWidget {
-  const DiscCover({
+  DiscCover({
     Key? key,
   }) : super(key: key);
 
